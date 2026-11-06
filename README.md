@@ -1,24 +1,42 @@
 # MeloShare
 
-A no-backend playlist sharing web app hosted as a static site. Built with plain HTML, CSS and JavaScript.
+MeloShare is a lightweight YouTube playlist sharing website.
 
-## Features
-- No login, Firebase, database, or API key.
-- Create and edit playlists in this browser.
-- Save playlists locally with LocalStorage.
-- Share a playlist using a self-contained link (playlist data is encoded into the URL fragment).
-- Anyone with the shared link can open and play the playlist.
-- YouTube playback uses the official privacy-enhanced embedded player.
-- Dark/light theme and English/Bangla interface.
+## Publish with GitHub Pages
 
-## Hosting on GitHub Pages
-1. Open repository **Settings → Pages**.
-2. Select **Deploy from a branch**.
-3. Choose branch `main` and folder `/(root)`, then Save.
-4. Wait for GitHub Pages to publish. The expected URL is https://shahiimran.github.io/Play/
+1. Open **Settings** in this repository.
+2. Select **Pages** from the sidebar.
+3. Under **Build and deployment**, choose **Deploy from a branch**.
+4. Select branch **main** and folder **/ (root)**, then Save.
+5. Wait for GitHub Pages to finish publishing.
 
-## Important limitation
-Without a server or shared database, there is no central public playlist directory or automatic cross-device sync. Playlists you create are saved only in your current browser. To share one, use its Share button: the playlist is embedded in the generated link, and anyone with that link can view/play it. If you want a global discover page where everyone automatically sees all newly created public playlists, a backend/database is required.
+Your site address will be:
 
-## YouTube
-Add a YouTube video URL or 11-character video ID. Playback happens inside YouTube's privacy-enhanced embedded player. MeloShare does not download audio/video.
+https://shahiimran.github.io/Play/
+
+## Playlists
+
+The website reads public playlist entries from `playlists.json` in the repository root. Each entry represents one YouTube video. Entries with the same `title` are grouped into one playlist.
+
+Example:
+
+```json
+[
+  {
+    "id": "song-1",
+    "title": "Bangla Favorites",
+    "creator": "MeloShare",
+    "category": "Bangla",
+    "description": "Songs to enjoy",
+    "videoId": "VIDEO_ID_HERE"
+  }
+]
+```
+
+Replace `VIDEO_ID_HERE` with an actual 11-character YouTube video ID. You can create/export entries using the private editor in the `Playpass` repository, then upload the exported JSON here.
+
+## Notes
+
+- Public playlists are loaded from `playlists.json`.
+- Personal drafts are saved in the visitor's browser only.
+- This static version has no account system or server-side admin authentication.
