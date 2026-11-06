@@ -13,12 +13,33 @@
 <section class="hero"><div><div class="muted">YOUR MUSIC COMMUNITY</div><h1 data-en="Your music.<br>Your playlists." data-bn="তোমার গান।<br>তোমার প্লেলিস্ট।">Your music.<br>Your playlists.</h1><p data-en="Collect songs you love, make playlists for every mood, and share them with everyone." data-bn="পছন্দের গান এক জায়গায় রাখো, মুড অনুযায়ী প্লেলিস্ট বানাও, সবার সঙ্গে শেয়ার করো।">Collect songs you love, make playlists for every mood, and share them with everyone.</p><button class="btn primary" id="make" data-en="＋ Make a playlist" data-bn="＋ প্লেলিস্ট বানাও">＋ Make a playlist</button></div><div class="hero-art">🎧</div></section>
 <div id="sharedBanner" class="share-note" hidden></div>
 <div class="head"><div><h2 data-en="Explore playlists" data-bn="প্লেলিস্ট দেখো">Explore playlists</h2><small class="muted" data-en="Playlists saved on this device and shared links" data-bn="এই ডিভাইসে রাখা ও শেয়ার করা প্লেলিস্ট">Playlists saved on this device and shared links</small></div><input class="search" id="search" placeholder="Search playlists…"></div><div class="grid" id="mine"></div>
-<p class="status" id="status">No account or database required. Your playlists are stored in this browser.</p></div>
+<p class="status" id="status">Public playlists load from GitHub. Your own drafts are stored in this browser.</p></div>
 <div class="player"><div class="now"><b id="now">Nothing playing</b><small id="sub">Choose a song from a playlist</small></div><iframe id="yt" title="YouTube player" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
 <div class="modal-bg" id="bg"><div class="modal"><h2 id="modalTitle">Create playlist</h2><div class="field"><label>Playlist name</label><input id="name" maxlength="70" placeholder="Late night vibes"></div><div class="field"><label>Description</label><textarea id="desc" maxlength="240" placeholder="What's the mood?"></textarea></div><div class="field"><label>Cover style</label><select id="cover"><option value="linear-gradient(135deg,#5b3a9e,#bd83c9)">Violet</option><option value="linear-gradient(135deg,#075985,#38bdf8)">Ocean</option><option value="linear-gradient(135deg,#9a3412,#fb923c)">Sunset</option><option value="linear-gradient(135deg,#166534,#86efac)">Forest</option><option value="linear-gradient(135deg,#9d174d,#f9a8d4)">Pink</option></select></div><div class="field"><label>YouTube video URL or ID</label><div class="row"><input id="song" placeholder="Paste YouTube link or ID"><button class="btn" id="add">Add</button></div><div class="muted" id="songs" style="font-size:13px"></div></div><div class="actions" style="justify-content:flex-end;margin-top:16px"><button class="btn" id="cancel">Cancel</button><button class="btn primary" id="save">Save playlist</button></div></div></div><div class="toast" id="toast"></div>
 <script>
 const $=id=>document.getElementById(id);let playlists=[],draft=[],editing=null,language="en",sharedMode=false;
 try{playlists=JSON.parse(localStorage.getItem("meloshare-playlists")||"[]")}catch{playlists=[]}
+async function loadPublicPlaylists(){
+ try{
+  const response=await fetch("./playlists.json",{cache:"no-store"});
+  if(!response.ok)throw Error("Could not load playlists.json");
+  const rows=await response.json();
+  const grouped=new Map();
+  rows.forEach((item,index)=>{
+   if(!item||!item.videoId)return;
+   const key=(item.title||item.name||"Shared playlist").trim();
+   if(!grouped.has(key))grouped.set(key,{id:"public-"+index,name:key,description:item.description||item.category||"Community playlist",cover:"linear-gradient(135deg,#5b3a9e,#bd83c9)",songs:[]});
+   grouped.get(key).songs.push({videoId:item.videoId,title:item.songTitle||item.videoTitle||"YouTube video"});
+  });
+  const publicItems=[...grouped.values()];
+  const localItems=playlists.filter(p=>!String(p.id).startsWith("public-"));
+  playlists=[...publicItems,...localItems];
+  render();
+  $("status").textContent="Public playlists loaded. Your own drafts stay saved in this browser.";
+ }catch(error){
+  $("status").textContent="Could not load public playlists. Check that GitHub Pages is enabled and playlists.json is in the repository root.";
+ }
+}
 const theme=localStorage.getItem("meloshare-theme")||"dark";document.documentElement.dataset.theme=theme;$("theme").textContent=theme==="dark"?"☼":"☾";
 function say(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2400)}
 function safe(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -40,5 +61,5 @@ $("save").onclick=()=>{let name=$("name").value.trim();if(!name)return say("Ente
 $("lang").onclick=()=>{language=language==="en"?"bn":"en";document.querySelectorAll("[data-en]").forEach(el=>el.innerHTML=el.dataset[language]);$("lang").textContent=language==="en"?"বাংলা":"English"};
 $("theme").onclick=()=>{let t=document.documentElement.dataset.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=t;localStorage.setItem("meloshare-theme",t);$("theme").textContent=t==="dark"?"☼":"☾"};
 $("create").onclick=$("make").onclick=openModal;$("cancel").onclick=()=>$("bg").classList.remove("show");$("bg").onclick=e=>{if(e.target===$("bg"))$("bg").classList.remove("show")};$("search").oninput=render;
-loadShared();render();
+loadShared();render();loadPublicPlaylists();
 </script></body></html>
